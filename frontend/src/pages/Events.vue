@@ -23,7 +23,11 @@ async function submit() {
     if (body.amount === '') delete body.amount
     else body.amount = Number(body.amount)
     const r = await api.addEvent(body)
-    msg.value = `已写入事件 #${r.event_id}` + (r.fact_id ? ` / 事实 #${r.fact_id}` : '')
+    if (r.status === 'quarantined') {
+      msg.value = `事件 #${r.event_id} 已入隔离区 #${r.quarantine_id} · ${r.reason_code}：${r.reason}`
+    } else {
+      msg.value = `已写入事件 #${r.event_id}` + (r.fact_id ? ` / 事实 #${r.fact_id}` : '')
+    }
     form.value.coupon_code = ''
     await load()
   } catch (e) { err.value = e.message }
@@ -50,12 +54,13 @@ onMounted(load)
       <button type="button" @click="submit">写入事件</button>
       <button type="button" class="ghost" @click="load">刷新</button>
     </div>
+    <p class="msg" v-if="!err">非法核销（无发放·金额非正·活动不存在等）不写事实，转入隔离区并可查原因码。</p>
     <p class="msg" v-if="msg">{{ msg }}</p>
     <p class="msg err" v-if="err">{{ err }}</p>
   </div>
   <div class="panel">
     <table>
-      <thead><tr><th>ID</th><th>类型</th><th>券码</th><th>活动</th><th>金额</th><th>业务日</th><th>时刻</th></tr></thead>
+      <thead><tr><th>ID</th><th>类型</th><th>券码</th><th>活动</th><th>金额</th><th>业务日</th><th>时刻</th><th>去向</th></tr></thead>
       <tbody>
         <tr v-for="r in rows" :key="r.id">
           <td>{{ r.id }}</td>
@@ -65,6 +70,12 @@ onMounted(load)
           <td>{{ r.amount }}</td>
           <td>{{ r.business_day }}</td>
           <td>{{ r.occurred_at }}</td>
+          <td>
+            <span v-if="r.quarantine_id" class="tag warn">隔离 {{ r.quarantine_status }}</span>
+            <span v-else-if="r.reason_code" class="tag warn">{{ r.reason_code }}</span>
+            <span v-else-if="r.event_type==='redeem'" class="tag ok">已入事实</span>
+            <span v-else class="muted">—</span>
+          </td>
         </tr>
       </tbody>
     </table>

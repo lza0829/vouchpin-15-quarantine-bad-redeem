@@ -27,11 +27,13 @@ onMounted(load)
       <div class="stat"><div class="k">待钉笔数</div><div class="v ticket">{{ preview.open_count }}</div></div>
       <div class="stat"><div class="k">待钉合计</div><div class="v ticket">{{ preview.open_total }}</div></div>
       <div class="stat"><div class="k">已钉扎</div><div class="v">{{ preview.already_sealed ? '是' : '否' }}</div></div>
+      <div class="stat"><div class="k">隔离已排除</div><div class="v">{{ preview.excluded_quarantine_count }} · {{ preview.excluded_quarantine_amount }}</div></div>
     </div>
     <div class="row">
       <button type="button" @click="seal" :disabled="preview.already_sealed || preview.open_count===0">钉扎本日核销</button>
       <button type="button" class="ghost" @click="load">刷新预览</button>
     </div>
+    <p class="msg" v-if="!err">仅 open 事实计入待钉合计；隔离行不进入预览与 sealed 合计。</p>
     <p class="msg" v-if="msg">{{ msg }}</p>
     <p class="msg err" v-if="err">{{ err }}</p>
   </div>

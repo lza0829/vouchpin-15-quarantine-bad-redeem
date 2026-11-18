@@ -22,6 +22,10 @@ export const api = {
   preview: (day) => req('/redeem/preview' + (day ? `?business_day=${encodeURIComponent(day)}` : '')),
   seal: (body) => req('/redeem/seal', { method: 'POST', body: JSON.stringify(body) }),
   batches: () => req('/batches'),
+  quarantine: (day) => req('/quarantine' + (day ? `?business_day=${encodeURIComponent(day)}` : '')),
+  promote: (id, body = {}) => req(`/quarantine/${id}/promote`, { method: 'POST', body: JSON.stringify(body) }),
+  discard: (id, body = {}) => req(`/quarantine/${id}/discard`, { method: 'POST', body: JSON.stringify(body) }),
+  audit: (targetType) => req('/audit' + (targetType ? `?target_type=${encodeURIComponent(targetType)}` : '')),
   getDay: () => req('/settings/day'),
   setDay: (business_day) => req('/settings/day', { method: 'PUT', body: JSON.stringify({ business_day }) }),
 }

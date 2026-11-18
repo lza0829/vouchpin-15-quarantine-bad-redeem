@@ -8,6 +8,7 @@ const chips = [
   { to: '/events', label: '券事件', tip: '发放·核销·作废' },
   { to: '/redeem', label: '核销钉扎', tip: '事实→批次' },
   { to: '/batches', label: '钉扎批次', tip: '已钉集合' },
+  { to: '/quarantine', label: '隔离区', tip: '非法核销·晋升/丢弃' },
   { to: '/settings', label: '设置', tip: '业务日' },
 ]
 function on(to) {

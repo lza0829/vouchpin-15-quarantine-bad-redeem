@@ -29,7 +29,18 @@ def insert_fact(conn: sqlite3.Connection, **fields: Any) -> int:
     return int(cur.lastrowid)
 
 
+def has_fact_for_coupon(conn: sqlite3.Connection, coupon_code: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM redeem_facts WHERE coupon_code=? LIMIT 1",
+        (coupon_code,),
+    ).fetchone()
+    return row is not None
+
+
 def open_facts_for_day(conn: sqlite3.Connection, business_day: str) -> list[dict[str, Any]]:
+    # Quarantine rows live in their own table, so they can never be picked up
+    # by the pinning query. The explicit status filter keeps that true even if
+    # a future intake path ever materialises a quarantined row here.
     rows = conn.execute(
         "SELECT * FROM redeem_facts WHERE business_day=? AND status='open' ORDER BY id",
         (business_day,),
@@ -37,12 +48,15 @@ def open_facts_for_day(conn: sqlite3.Connection, business_day: str) -> list[dict
     return [dict(r) for r in rows]
 
 
-def mark_batched(conn: sqlite3.Connection, fact_ids: list[int], batch_id: int) -> None:
+def mark_batched(conn: sqlite3.Connection, fact_ids: list[int], batch_id: int) -> int:
+    pinned = 0
     for fid in fact_ids:
-        conn.execute(
-            "UPDATE redeem_facts SET status='sealed', batch_id=? WHERE id=?",
+        cur = conn.execute(
+            "UPDATE redeem_facts SET status='sealed', batch_id=? WHERE id=? AND status='open'",
             (batch_id, fid),
         )
+        pinned += int(cur.rowcount or 0)
+    return pinned
 
 
 def day_is_sealed(conn: sqlite3.Connection, business_day: str) -> bool:
